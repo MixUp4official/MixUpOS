@@ -1,0 +1,83 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?S=C3=B6nke=20Holz?= <soenke.holz@serenityos.org>
+Date: Wed, 28 May 2025 12:27:55 +0200
+Subject: [PATCH] [RISCV] Implement __init_riscv_feature_bits for SerenityOS
+
+The SerenityOS dynamic linker provides a magic function
+"__get_riscv_feature_bits" that populates __riscv_feature_bits
+and __riscv_cpu_model.
+---
+ .../clang/Basic/DiagnosticFrontendKinds.td    |  2 +-
+ clang/lib/CodeGen/CodeGenFunction.cpp         |  5 +++--
+ compiler-rt/lib/builtins/cpu_model/riscv.c    | 22 +++++++++++++++++--
+ 3 files changed, 24 insertions(+), 5 deletions(-)
+
+diff --git a/clang/include/clang/Basic/DiagnosticFrontendKinds.td b/clang/include/clang/Basic/DiagnosticFrontendKinds.td
+index e2b257ceae80d9acfc2d33a6975fc4916e73ac81..21b28586b0ed296c5f29553da44d078ca36768b4 100644
+--- a/clang/include/clang/Basic/DiagnosticFrontendKinds.td
++++ b/clang/include/clang/Basic/DiagnosticFrontendKinds.td
+@@ -393,7 +393,7 @@ def err_ast_action_on_llvm_ir : Error<
+ def err_invalid_llvm_ir : Error<"invalid LLVM IR input: %0">;
+ 
+ def err_os_unsupport_riscv_fmv : Error<
+-  "function multiversioning is currently only supported on Linux">;
++  "function multiversioning is currently only supported on Linux and SerenityOS">;
+ 
+ def warn_unreachable_version
+     : Warning<"function version '%0' is unreachable; ignoring version">,
+diff --git a/clang/lib/CodeGen/CodeGenFunction.cpp b/clang/lib/CodeGen/CodeGenFunction.cpp
+index 6c0589be329132b1c1b45407c3488cef591f1b7a..797bd49d0228a418b7dc65ecca3d756d5b85d2d9 100644
+--- a/clang/lib/CodeGen/CodeGenFunction.cpp
++++ b/clang/lib/CodeGen/CodeGenFunction.cpp
+@@ -3020,8 +3020,9 @@ void CodeGenFunction::EmitMultiVersionResolver(
+ void CodeGenFunction::EmitRISCVMultiVersionResolver(
+     llvm::Function *Resolver, ArrayRef<FMVResolverOption> Options) {
+ 
+-  if (getContext().getTargetInfo().getTriple().getOS() !=
+-      llvm::Triple::OSType::Linux) {
++  llvm::Triple::OSType OS = getContext().getTargetInfo().getTriple().getOS();
++  if (OS != llvm::Triple::OSType::Linux &&
++      OS != llvm::Triple::OSType::Serenity) {
+     CGM.getDiags().Report(diag::err_os_unsupport_riscv_fmv);
+     return;
+   }
+diff --git a/compiler-rt/lib/builtins/cpu_model/riscv.c b/compiler-rt/lib/builtins/cpu_model/riscv.c
+index c02f6e9961ca427cf8c3c9692a8c4b36577c84d2..1392ea7787e1c7a991b6e20480c1cd0096f4c714 100644
+--- a/compiler-rt/lib/builtins/cpu_model/riscv.c
++++ b/compiler-rt/lib/builtins/cpu_model/riscv.c
+@@ -339,7 +339,23 @@ static void initRISCVFeature(struct riscv_hwprobe Hwprobes[]) {
+     __riscv_feature_bits.features[i] = features[i];
+ }
+ 
+-#endif // defined(__linux__)
++#elif defined(__serenity__)
++
++extern void __get_riscv_feature_bits(void *, void *) __attribute__((weak));
++
++static void initRISCVFeature(void) {
++  if (__get_riscv_feature_bits) {
++    __riscv_feature_bits.length = RISCV_FEATURE_BITS_LENGTH;
++    __get_riscv_feature_bits(&__riscv_feature_bits, &__riscv_cpu_model);
++  } else {
++    __riscv_feature_bits.length = 0;
++    __riscv_cpu_model.mvendorid = 0;
++    __riscv_cpu_model.marchid = 0;
++    __riscv_cpu_model.mimpid = 0;
++  }
++}
++
++#endif
+ 
+ static int FeaturesBitCached = 0;
+ 
+@@ -376,7 +392,9 @@ void __init_riscv_feature_bits(void *PlatformArgs) {
+     return;
+ 
+   initRISCVFeature(Hwprobes);
+-#endif // defined(__linux__)
++#elif defined(__serenity__)
++  initRISCVFeature();
++#endif
+ 
+   FeaturesBitCached = 1;
+ }

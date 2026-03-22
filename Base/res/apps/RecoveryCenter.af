@@ -1,0 +1,5 @@
+[App]
+Name=&Recovery Center
+Executable=/bin/RecoveryCenter
+Category=&Utilities
+Description=Open updates, diagnostics, and recovery actions

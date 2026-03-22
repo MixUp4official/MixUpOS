@@ -1,0 +1,8 @@
+[App]
+Name=&File Manager
+Executable=/bin/FileManager
+Category=&Utilities
+
+[Launcher]
+MimeTypes=application/zip,application/tar,application/x-debian-package
+FileTypes=zip,tar,deb,apk,ipa,jar,aar,whl,xpi,appx,msix,cbz,epub,war,tgz,gz,tbz,tbz2,bz2,txz,xz

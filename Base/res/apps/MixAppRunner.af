@@ -1,0 +1,10 @@
+[App]
+Name=MixApp Runner
+Executable=/bin/MixAppRunner
+Category=Utilities
+Description=Launch portable MixUpOS .mixapp applications
+ExcludeFromSystemMenu=true
+
+[Launcher]
+MimeTypes=application/x-mixupos-app
+FileTypes=mixapp

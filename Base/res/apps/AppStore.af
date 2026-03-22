@@ -1,0 +1,4 @@
+[App]
+Name=App Store
+Executable=/bin/AppStore
+Category=Utilities
