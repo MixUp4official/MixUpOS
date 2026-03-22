@@ -34,13 +34,13 @@
 #include <LibGfx/WindowTheme.h>
 #include <stdio.h>
 
-class TaskbarWidget final : public GUI::Widget {
-    C_OBJECT(TaskbarWidget);
+class MixUpTaskbarWidget final : public GUI::Widget {
+    C_OBJECT(MixUpTaskbarWidget);
 
 public:
-    virtual ~TaskbarWidget() override = default;
+    virtual ~MixUpTaskbarWidget() override = default;
 
-    static ErrorOr<NonnullRefPtr<TaskbarWidget>> create();
+    static ErrorOr<NonnullRefPtr<MixUpTaskbarWidget>> create();
 
 protected:
     virtual void context_menu_event(GUI::ContextMenuEvent& event) override
@@ -50,12 +50,12 @@ protected:
             if (!window.is_minimized())
                 visible_windows_count += 1;
         });
-        m_show_desktop_action->set_text(visible_windows_count >= 1 ? "Show Desktop" : "Show open Windows");
+        m_show_desktop_action->set_text(visible_windows_count >= 1 ? "MixUpOS Show Desktop" : "MixUpOS Show Open Windows");
         m_context_menu->popup(event.screen_position());
     }
 
 private:
-    TaskbarWidget() = default;
+    MixUpTaskbarWidget() = default;
 
     virtual void paint_event(GUI::PaintEvent& event) override
     {
@@ -78,46 +78,46 @@ private:
     RefPtr<GUI::Action> m_show_desktop_action;
 };
 
-ErrorOr<NonnullRefPtr<TaskbarWidget>> TaskbarWidget::create()
+ErrorOr<NonnullRefPtr<MixUpTaskbarWidget>> MixUpTaskbarWidget::create()
 {
-    auto widget = TaskbarWidget::construct();
+    auto widget = MixUpTaskbarWidget::construct();
     TRY(widget->create_context_menu());
     return widget;
 }
 
-ErrorOr<void> TaskbarWidget::create_context_menu()
+ErrorOr<void> MixUpTaskbarWidget::create_context_menu()
 {
     m_context_menu = GUI::Menu::construct();
 
-    m_show_desktop_action = GUI::Action::create("Show Desktop", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/desktop.png"sv)), [](auto&) {
+    m_show_desktop_action = GUI::Action::create("MixUpOS Show Desktop", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/desktop.png"sv)), [](auto&) {
         GUI::ConnectionToWindowManagerServer::the().async_toggle_show_desktop();
     });
 
-    auto open_browser_action = GUI::Action::create("&Browser", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-browser.png"sv)), [this](auto&) {
+    auto open_browser_action = GUI::Action::create("&MixUp Browser", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-browser.png"sv)), [this](auto&) {
         GUI::Process::spawn_or_show_error(window(), "/bin/Browser"sv);
     });
 
-    auto open_files_action = GUI::Action::create("&Files", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-file-manager.png"sv)), [this](auto&) {
+    auto open_files_action = GUI::Action::create("&MixUp Files", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-file-manager.png"sv)), [this](auto&) {
         GUI::Process::spawn_or_show_error(window(), "/bin/FileManager"sv);
     });
 
-    auto open_terminal_action = GUI::Action::create("&Terminal", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"sv)), [this](auto&) {
+    auto open_terminal_action = GUI::Action::create("&MixUp Terminal", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"sv)), [this](auto&) {
         GUI::Process::spawn_or_show_error(window(), "/bin/Terminal"sv);
     });
 
-    auto open_app_store_action = GUI::Action::create("&App Store", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-browser.png"sv)), [this](auto&) {
+    auto open_app_store_action = GUI::Action::create("&MixUp App Store", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-browser.png"sv)), [this](auto&) {
         GUI::Process::spawn_or_show_error(window(), "/bin/AppStore"sv);
     });
 
-    auto open_recovery_center_action = GUI::Action::create("&Recovery Center", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-settings.png"sv)), [this](auto&) {
+    auto open_recovery_center_action = GUI::Action::create("&MixUp Recovery Center", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-settings.png"sv)), [this](auto&) {
         GUI::Process::spawn_or_show_error(window(), "/bin/RecoveryCenter"sv);
     });
 
-    auto open_settings_action = GUI::Action::create("&Settings", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/settings.png"sv)), [this](auto&) {
+    auto open_settings_action = GUI::Action::create("&MixUp Settings", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/settings.png"sv)), [this](auto&) {
         GUI::Process::spawn_or_show_error(window(), "/bin/Settings"sv);
     });
 
-    auto open_system_monitor_action = GUI::Action::create("System &Monitor", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-system-monitor.png"sv)), [this](auto&) {
+    auto open_system_monitor_action = GUI::Action::create("MixUpOS System &Monitor", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-system-monitor.png"sv)), [this](auto&) {
         GUI::Process::spawn_or_show_error(window(), "/bin/SystemMonitor"sv);
     });
 
@@ -147,23 +147,23 @@ TaskbarWindow::TaskbarWindow()
 {
     set_window_type(GUI::WindowType::Taskbar);
     set_has_alpha_channel(GUI::Application::the()->palette().window_theme().taskbar_uses_alpha());
-    set_title("Taskbar");
+    set_title("MixUpOS Taskbar");
 
     on_screen_rects_change(GUI::Desktop::the().rects(), GUI::Desktop::the().main_screen_index());
 }
 
 ErrorOr<void> TaskbarWindow::populate_taskbar()
 {
-    auto main_widget = TRY(TaskbarWidget::create());
+    auto main_widget = TRY(MixUpTaskbarWidget::create());
     set_main_widget(main_widget);
 
-    main_widget->set_layout<GUI::HorizontalBoxLayout>(GUI::Margins { 2, 3, 0, 3 });
+    main_widget->set_layout<GUI::HorizontalBoxLayout>(GUI::Margins { 6, 4, 6, 4 }, 6);
 
     m_quick_launch = TRY(Taskbar::QuickLaunchWidget::create());
     TRY(main_widget->try_add_child(*m_quick_launch));
 
     m_task_button_container = main_widget->add<GUI::Widget>();
-    m_task_button_container->set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 3);
+    m_task_button_container->set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 6);
 
     m_default_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/window.png"sv));
 
@@ -173,8 +173,8 @@ ErrorOr<void> TaskbarWindow::populate_taskbar()
     m_clock_widget = main_widget->add<Taskbar::ClockWidget>();
 
     m_show_desktop_button = main_widget->add<GUI::Button>();
-    m_show_desktop_button->set_tooltip("Show Desktop"_string);
-    m_show_desktop_button->set_icon(TRY(GUI::Icon::try_create_default_icon("desktop"sv)).bitmap_for_size(16));
+    m_show_desktop_button->set_tooltip("MixUpOS Show Desktop"_string);
+    m_show_desktop_button->set_icon(TRY(GUI::Icon::try_create_default_icon("desktop"sv)).bitmap_for_size(taskbar_icon_size()));
     m_show_desktop_button->set_button_style(Gfx::ButtonStyle::Coolbar);
     m_show_desktop_button->set_fixed_size(24, 24);
     m_show_desktop_button->on_click = TaskbarWindow::show_desktop_button_clicked;
@@ -194,11 +194,12 @@ void TaskbarWindow::add_system_menu(NonnullRefPtr<GUI::Menu> system_menu)
 {
     m_system_menu = move(system_menu);
 
-    m_start_button = GUI::Button::construct("MixUp Start"_string);
+    m_start_button = GUI::Button::construct("MixUpOS"_string);
     set_start_button_font(Gfx::FontDatabase::default_font().bold_variant());
-    m_start_button->set_icon_spacing(0);
+    m_start_button->set_icon_spacing(6);
+    m_start_button->set_fixed_height(28);
     auto app_icon = GUI::Icon::default_icon("ladyball"sv);
-    m_start_button->set_icon(app_icon.bitmap_for_size(16));
+    m_start_button->set_icon(app_icon.bitmap_for_size(taskbar_icon_size()));
     m_start_button->set_menu(m_system_menu);
 
     GUI::Widget* main = main_widget();

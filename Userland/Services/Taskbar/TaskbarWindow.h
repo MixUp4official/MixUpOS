@@ -25,7 +25,7 @@ public:
     static ErrorOr<NonnullRefPtr<TaskbarWindow>> create();
     virtual ~TaskbarWindow() override = default;
 
-    static int taskbar_height() { return 27; }
+    static int taskbar_height() { return 34; }
     static int taskbar_icon_size() { return 16; }
 
     virtual void config_string_did_change(StringView, StringView, StringView, StringView) override;

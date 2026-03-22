@@ -296,7 +296,7 @@ QuickLaunchWidget::QuickLaunchWidget()
     set_shrink_to_fit(true);
     set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 0);
     set_frame_style(Gfx::FrameStyle::NoFrame);
-    set_fixed_height(24);
+    set_fixed_height(28);
 }
 
 ErrorOr<void> QuickLaunchWidget::create_context_menu()
