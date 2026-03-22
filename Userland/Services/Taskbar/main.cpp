@@ -35,7 +35,7 @@
 #include <unistd.h>
 
 static ErrorOr<Vector<ByteString>> discover_apps_and_categories();
-static ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window&);
+static ErrorOr<NonnullRefPtr<GUI::Menu>> build_mixupos_system_menu(GUI::Window&);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -59,7 +59,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = TRY(TaskbarWindow::create());
 
-    auto menu = TRY(build_system_menu(*window));
+    auto menu = TRY(build_mixupos_system_menu(*window));
     menu->realize_menu_if_needed();
     window->add_system_menu(menu);
 
@@ -78,9 +78,9 @@ Vector<NonnullRefPtr<Desktop::AppFile>> g_apps;
 
 Color g_menu_selection_color;
 
-Vector<Gfx::SystemThemeMetaData> g_themes;
-RefPtr<GUI::Menu> g_themes_menu;
-GUI::ActionGroup g_themes_group;
+Vector<Gfx::SystemThemeMetaData> g_mixup_themes;
+RefPtr<GUI::Menu> g_mixup_themes_menu;
+GUI::ActionGroup g_mixup_themes_group;
 
 static bool less_than_ignore_hotkey(ByteString const& a, ByteString const& b)
 {
@@ -145,23 +145,23 @@ ErrorOr<Vector<ByteString>> discover_apps_and_categories()
     return sorted_app_categories;
 }
 
-ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
+ErrorOr<NonnullRefPtr<GUI::Menu>> build_mixupos_system_menu(GUI::Window& window)
 {
     Vector<ByteString> const sorted_app_categories = TRY(discover_apps_and_categories());
-    auto system_menu = GUI::Menu::construct("\xE2\x9A\xA1"_string); // HIGH VOLTAGE SIGN
+    auto system_menu = GUI::Menu::construct("MixUpOS"_string);
 
     system_menu->add_action(GUI::Action::create("&About MixUpOS", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/ladyball.png"sv)), [&](auto&) {
         GUI::Process::spawn_or_show_error(&window, "/bin/About"sv);
     }));
 
-    system_menu->add_action(make_spawn_action(window, "&Browser"_string, "/res/icons/16x16/app-browser.png"sv, "/bin/Browser"sv));
-    system_menu->add_action(make_spawn_action(window, "&Files"_string, "/res/icons/16x16/app-file-manager.png"sv, "/bin/FileManager"sv));
-    system_menu->add_action(make_spawn_action(window, "&Terminal"_string, "/res/icons/16x16/app-terminal.png"sv, "/bin/Terminal"sv));
-    system_menu->add_action(make_spawn_action(window, "&Settings"_string, "/res/icons/16x16/app-settings.png"sv, "/bin/Settings"sv));
-    system_menu->add_action(make_spawn_action(window, "System &Monitor"_string, "/res/icons/16x16/app-system-monitor.png"sv, "/bin/SystemMonitor"sv));
-    system_menu->add_action(make_spawn_action(window, "&App Store"_string, "/res/icons/16x16/app-browser.png"sv, "/bin/AppStore"sv));
-    system_menu->add_action(make_spawn_action(window, "Software &Updates"_string, "/res/icons/16x16/themes.png"sv, "/bin/AppStore"sv, Array { "--updates-only"sv }));
-    system_menu->add_action(make_spawn_action(window, "&Recovery Center"_string, "/res/icons/16x16/app-settings.png"sv, "/bin/RecoveryCenter"sv));
+    system_menu->add_action(make_spawn_action(window, "&MixUp Browser"_string, "/res/icons/16x16/app-browser.png"sv, "/bin/Browser"sv));
+    system_menu->add_action(make_spawn_action(window, "&MixUp Files"_string, "/res/icons/16x16/app-file-manager.png"sv, "/bin/FileManager"sv));
+    system_menu->add_action(make_spawn_action(window, "&MixUp Terminal"_string, "/res/icons/16x16/app-terminal.png"sv, "/bin/Terminal"sv));
+    system_menu->add_action(make_spawn_action(window, "&MixUp Settings"_string, "/res/icons/16x16/app-settings.png"sv, "/bin/Settings"sv));
+    system_menu->add_action(make_spawn_action(window, "MixUpOS System &Monitor"_string, "/res/icons/16x16/app-system-monitor.png"sv, "/bin/SystemMonitor"sv));
+    system_menu->add_action(make_spawn_action(window, "&MixUp App Store"_string, "/res/icons/16x16/app-browser.png"sv, "/bin/AppStore"sv));
+    system_menu->add_action(make_spawn_action(window, "MixUpOS Software &Updates"_string, "/res/icons/16x16/themes.png"sv, "/bin/AppStore"sv, Array { "--updates-only"sv }));
+    system_menu->add_action(make_spawn_action(window, "&MixUp Recovery Center"_string, "/res/icons/16x16/app-settings.png"sv, "/bin/RecoveryCenter"sv));
 
     system_menu->add_separator();
 
@@ -225,20 +225,20 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
 
     system_menu->add_separator();
 
-    g_themes_group.set_exclusive(true);
-    g_themes_group.set_unchecking_allowed(false);
+    g_mixup_themes_group.set_exclusive(true);
+    g_mixup_themes_group.set_unchecking_allowed(false);
 
-    g_themes_menu = system_menu->add_submenu("&Themes"_string);
-    g_themes_menu->set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/themes.png"sv)));
+    g_mixup_themes_menu = system_menu->add_submenu("&MixUp Themes"_string);
+    g_mixup_themes_menu->set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/themes.png"sv)));
 
-    g_themes = TRY(Gfx::list_installed_system_themes());
+    g_mixup_themes = TRY(Gfx::list_installed_system_themes());
     auto current_theme_name = GUI::ConnectionToWindowServer::the().get_system_theme();
 
     {
         int theme_identifier = 0;
-        for (auto& theme : g_themes) {
+        for (auto& theme : g_mixup_themes) {
             auto action = GUI::Action::create_checkable(theme.menu_name, [theme_identifier, current_theme_name, &window](auto&) {
-                auto& theme = g_themes[theme_identifier];
+                auto& theme = g_mixup_themes[theme_identifier];
                 dbgln("Theme switched from {} to {} at path {}", current_theme_name, theme.name, theme.path);
                 if (window.main_widget()->palette().color_scheme_path() != ""sv)
                     VERIFY(GUI::ConnectionToWindowServer::the().set_system_theme(theme.path, theme.name, false, GUI::ConnectionToWindowServer::the().get_preferred_color_scheme()));
@@ -247,32 +247,32 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
             });
             if (theme.name == current_theme_name)
                 action->set_checked(true);
-            g_themes_group.add_action(action);
-            g_themes_menu->add_action(action);
+            g_mixup_themes_group.add_action(action);
+            g_mixup_themes_menu->add_action(action);
             ++theme_identifier;
         }
     }
 
     GUI::Application::the()->on_theme_change = [&]() {
-        if (g_themes_menu->is_visible())
+        if (g_mixup_themes_menu->is_visible())
             return;
         auto current_theme_name = GUI::ConnectionToWindowServer::the().get_system_theme();
         auto theme_overridden = GUI::ConnectionToWindowServer::the().is_system_theme_overridden();
-        VERIFY(g_themes.size() == g_themes_menu->items().size());
-        for (size_t index = 0; index < g_themes.size(); ++index) {
-            auto* action = g_themes_menu->action_at(index);
-            auto& theme = g_themes[index];
+        VERIFY(g_mixup_themes.size() == g_mixup_themes_menu->items().size());
+        for (size_t index = 0; index < g_mixup_themes.size(); ++index) {
+            auto* action = g_mixup_themes_menu->action_at(index);
+            auto& theme = g_mixup_themes[index];
             action->set_checked(!theme_overridden && theme.name == current_theme_name);
         }
     };
 
     system_menu->add_separator();
-    system_menu->add_action(make_spawn_action(window, "&Help"_string, "/res/icons/16x16/app-help.png"sv, "/bin/Help"sv));
-    system_menu->add_action(GUI::Action::create("&Run...", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-run.png"sv)), [&](auto&) {
+    system_menu->add_action(make_spawn_action(window, "&MixUp Help"_string, "/res/icons/16x16/app-help.png"sv, "/bin/Help"sv));
+    system_menu->add_action(GUI::Action::create("MixUpOS &Run...", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-run.png"sv)), [&](auto&) {
         GUI::Process::spawn_or_show_error(&window, "/bin/Run"sv, ReadonlySpan<StringView> {}, Core::StandardPaths::home_directory());
     }));
     system_menu->add_separator();
-    system_menu->add_action(GUI::Action::create("E&xit...", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/power.png"sv)), [&](auto&) {
+    system_menu->add_action(GUI::Action::create("MixUpOS &Power...", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/power.png"sv)), [&](auto&) {
         if (auto command = ShutdownDialog::show(); command.has_value())
             GUI::Process::spawn_or_show_error(&window, command->executable, command->arguments);
     }));
