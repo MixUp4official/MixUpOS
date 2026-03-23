@@ -15,6 +15,14 @@ This generates:
 
 - `mixupos-installer.iso`
 
+
+You can also customize output details:
+
+```sh
+Meta/build-image-installer-iso.sh --output ./out/mixupos-real-installer.iso --label MIXUPOS_REAL
+```
+
+
 ## Write ISO to USB
 
 On Linux:
@@ -28,10 +36,11 @@ Replace `/dev/sdX` with your USB device. This command destroys all data on that 
 ## Installation workflow (GUI-oriented)
 
 1. Boot from the USB on target hardware (UEFI or BIOS via GRUB ISO entry).
-2. Launch **Recovery Center** from the desktop.
-3. Use the hardware audit and installer guidance tools to verify driver readiness.
-4. Use `PartitionEditor` to prepare the destination disk.
-5. Deploy the prepared image (`grub_uefi_disk_image` or `grub_disk_image`) to the selected disk.
+2. Choose GUI, text mode, or safe mode directly from the ISO boot menu depending on your hardware stability.
+3. Launch **Recovery Center** from the desktop.
+4. Use the hardware audit and installer guidance tools to verify driver readiness.
+5. Use `PartitionEditor` to prepare the destination disk.
+6. Deploy the prepared image (`grub_uefi_disk_image` or `grub_disk_image`) to the selected disk.
 
 ## Driver readiness goals for fair Windows comparisons
 
