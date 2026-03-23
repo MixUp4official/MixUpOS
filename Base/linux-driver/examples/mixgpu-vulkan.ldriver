@@ -1,0 +1,6 @@
+name=MixGPU Vulkan Runtime
+pci_ids=1234:2221,1234:2222
+linux_driver=vulkan-loader
+native_driver=Kernel/Graphics/MixGPUVulkanDriver
+base_profile=/base/usr/share/graphics/mixgpu-vulkan.profile
+status=enabled

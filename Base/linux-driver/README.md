@@ -22,3 +22,15 @@ status=enabled
 4. Use output to match Linux IDs to existing native drivers.
 
 This provides real Linux-driver compatibility mapping at the hardware ID layer without needing proprietary binary modules.
+
+## Preinstalled graphics mappings
+
+MixUpOS ships with graphics compatibility manifests for:
+
+- OpenGL userspace/runtime mapping
+- Vulkan ICD/loader mapping
+
+These manifests are provided in `/linux-driver/examples` and can be used as a baseline for self-managed driver bring-up in `/kernel` and `/base`.
+
+
+For kernel-side planning, see `Kernel/Graphics/MixGPU/ARCHITECTURE.md` (layering, rollout phases, and adapter boundaries).

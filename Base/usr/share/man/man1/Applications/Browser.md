@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-browser.png) MixBrowser - MixUpOS web browser
+![Icon](/res/icons/16x16/app-browser.png) ExperimentalMix - MixUpOS web browser
 
 [Open](launch:///bin/Browser)
 
@@ -12,7 +12,7 @@ $ Browser [options] [urls]
 
 ## Description
 
-MixBrowser is the built-in web browser for MixUpOS. It is built on top of the system's open-source `LibWeb` and `LibJS` engines, allowing it to render HTML, CSS, and JavaScript.
+ExperimentalMix is the built-in web browser for MixUpOS. It is built on top of the system's open-source `LibWeb` and `LibJS` engines (Ladybird stack), allowing it to render HTML, CSS, and JavaScript.
 
 ## Options
 

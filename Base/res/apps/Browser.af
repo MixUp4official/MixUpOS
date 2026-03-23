@@ -1,9 +1,9 @@
 [App]
-Name=&MixBrowser
+Name=&ExperimentalMix
 Executable=/bin/Browser
 Arguments=--new-window
 Category=&Internet
-Description=Browse the web with MixUpOS' built-in browser
+Description=Browse the web with ExperimentalMix (Ladybird-based)
 
 [Launcher]
 FileTypes=html,htm

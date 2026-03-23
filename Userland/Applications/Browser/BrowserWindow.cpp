@@ -62,7 +62,7 @@ BrowserWindow::BrowserWindow(WebView::CookieJar& cookie_jar, Vector<URL::URL> co
     restore_size_and_position("Browser"sv, "Window"sv, { { 730, 560 } });
     save_size_and_position_on_close("Browser"sv, "Window"sv);
     set_icon(app_icon.bitmap_for_size(16));
-    set_title("MixBrowser");
+    set_title("ExperimentalMix");
 
     auto widget = set_main_widget<GUI::Widget>();
     widget->load_from_gml(browser_window_gml).release_value_but_fixme_should_propagate_errors();
@@ -349,7 +349,7 @@ void BrowserWindow::build_menus(StringView const man_file)
     }
 
     settings_menu->add_separator();
-    auto open_settings_action = GUI::Action::create("MixBrowser &Settings", Gfx::Bitmap::load_from_file("/res/icons/16x16/settings.png"sv).release_value_but_fixme_should_propagate_errors(),
+    auto open_settings_action = GUI::Action::create("ExperimentalMix &Settings", Gfx::Bitmap::load_from_file("/res/icons/16x16/settings.png"sv).release_value_but_fixme_should_propagate_errors(),
         [this](auto&) {
             GUI::Process::spawn_or_show_error(this, "/bin/BrowserSettings"sv);
         });
@@ -557,7 +557,7 @@ void BrowserWindow::set_window_title_for_tab(Tab const& tab)
 {
     auto& title = tab.title();
     auto url = tab.url();
-    set_title(ByteString::formatted("{} - MixBrowser", title.is_empty() ? url.to_byte_string() : title));
+    set_title(ByteString::formatted("{} - ExperimentalMix", title.is_empty() ? url.to_byte_string() : title));
 }
 
 Tab& BrowserWindow::create_new_tab(URL::URL const& url, Web::HTML::ActivateTab activate)
