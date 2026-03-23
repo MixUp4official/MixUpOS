@@ -60,6 +60,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringBuilder builder;
     TRY(builder.try_append("[App]\n"sv));
     TRY(builder.try_appendff("Name={}\n", app_name));
+    TRY(builder.try_append("Type=CompatibilityWrapper\n"sv));
     TRY(builder.try_append("Executable=/bin/CompatibilityAssistant\n"sv));
     TRY(builder.try_append("WorkingDirectory=.\n"sv));
     TRY(builder.try_append("Argument1="sv));

@@ -112,6 +112,7 @@ private:
     NonnullRefPtr<GUI::Action> create_remove_current_editor_tab_widget_action();
     ErrorOr<NonnullRefPtr<GUI::Action>> create_remove_current_editor_action();
     ErrorOr<NonnullRefPtr<GUI::Action>> create_open_action();
+    ErrorOr<NonnullRefPtr<GUI::Action>> create_export_mixapp_action();
     ErrorOr<NonnullRefPtr<GUI::Action>> create_toggle_open_file_in_single_click_action();
     NonnullRefPtr<GUI::Action> create_save_action();
     NonnullRefPtr<GUI::Action> create_save_as_action();
@@ -236,6 +237,7 @@ private:
     RefPtr<GUI::Action> m_remove_current_editor_tab_widget_action;
     RefPtr<GUI::Action> m_remove_current_editor_action;
     RefPtr<GUI::Action> m_open_action;
+    RefPtr<GUI::Action> m_export_mixapp_action;
     RefPtr<GUI::Action> m_save_action;
     RefPtr<GUI::Action> m_save_as_action;
     RefPtr<GUI::Action> m_add_editor_action;
