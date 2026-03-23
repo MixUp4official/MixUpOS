@@ -20,6 +20,7 @@ void init_gop_and_populate_framebuffer_boot_info(BootInfo& boot_info)
 
     // Choose the mode with the highest pixel count.
     EFI::GraphicsOutputModeInformation chosen_mode_info {};
+    BootFramebufferType chosen_framebuffer_type = BootFramebufferType::None;
     ssize_t chosen_mode_number = -1;
 
     // NOTE: MaxMode is the number of supported modes, not the highest mode number.
@@ -32,10 +33,17 @@ void init_gop_and_populate_framebuffer_boot_info(BootInfo& boot_info)
             continue;
         }
 
-        if (mode_info->pixel_format == EFI::GraphicsPixelFormat::BlueGreenRedReserved8BitPerColor
+        BootFramebufferType mode_type = BootFramebufferType::None;
+        if (mode_info->pixel_format == EFI::GraphicsPixelFormat::BlueGreenRedReserved8BitPerColor)
+            mode_type = BootFramebufferType::BGRx8888;
+        else if (mode_info->pixel_format == EFI::GraphicsPixelFormat::RedGreenBlueReserved8BitPerColor)
+            mode_type = BootFramebufferType::RGBx8888;
+
+        if (mode_type != BootFramebufferType::None
             && mode_info->vertical_resolution * mode_info->horizontal_resolution > chosen_mode_info.vertical_resolution * chosen_mode_info.horizontal_resolution) {
             chosen_mode_info = *mode_info;
             chosen_mode_number = mode_number;
+            chosen_framebuffer_type = mode_type;
         }
     }
 
@@ -57,7 +65,7 @@ void init_gop_and_populate_framebuffer_boot_info(BootInfo& boot_info)
         .width = gop->mode->info->horizontal_resolution,
         .height = gop->mode->info->vertical_resolution,
         .bpp = 32,
-        .type = BootFramebufferType::BGRx8888,
+        .type = chosen_framebuffer_type,
     };
 }
 

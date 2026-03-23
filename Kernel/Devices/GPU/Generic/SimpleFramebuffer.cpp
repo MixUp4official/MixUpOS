@@ -27,7 +27,7 @@ EARLY_DEVICETREE_DRIVER(SimpleFramebufferDriver, compatibles_array);
 ErrorOr<void> SimpleFramebufferDriver::probe(DeviceTree::Device const& device, StringView) const
 {
     // Prefer to use the bootloader-provided framebuffer, if available.
-    if (!g_boot_info.boot_framebuffer.paddr.is_null() && g_boot_info.boot_framebuffer.type == BootFramebufferType::BGRx8888)
+    if (!g_boot_info.boot_framebuffer.paddr.is_null() && g_boot_info.boot_framebuffer.type != BootFramebufferType::None)
         return {};
 
     auto maybe_width = device.node().get_property("width"sv);
@@ -46,8 +46,15 @@ ErrorOr<void> SimpleFramebufferDriver::probe(DeviceTree::Device const& device, S
     if (!maybe_format.has_value())
         return EINVAL;
 
-    if (!first_is_one_of(maybe_format.value().as_string(), "a8r8g8b8"sv, "x8r8g8b8"sv))
+    auto format = maybe_format.value().as_string();
+    if (!first_is_one_of(format, "a8r8g8b8"sv, "x8r8g8b8"sv, "a8b8g8r8"sv, "x8b8g8r8"sv, "r8g8b8x8"sv, "b8g8r8x8"sv))
         return ENOTSUP;
+
+    BootFramebufferType framebuffer_type = BootFramebufferType::None;
+    if (first_is_one_of(format, "a8r8g8b8"sv, "x8r8g8b8"sv, "r8g8b8x8"sv))
+        framebuffer_type = BootFramebufferType::BGRx8888;
+    else if (first_is_one_of(format, "a8b8g8r8"sv, "x8b8g8r8"sv, "b8g8r8x8"sv))
+        framebuffer_type = BootFramebufferType::RGBx8888;
 
     auto framebuffer_resource = TRY(device.get_resource(0));
 
@@ -57,7 +64,7 @@ ErrorOr<void> SimpleFramebufferDriver::probe(DeviceTree::Device const& device, S
         .width = maybe_width.release_value().as<u32>(),
         .height = maybe_height.release_value().as<u32>(),
         .bpp = 32,
-        .type = BootFramebufferType::BGRx8888,
+        .type = framebuffer_type,
     };
 
     // Devicetree drivers are probed after the initial boot console is set up, so we need to re-initialize the g_boot_console to use the this framebuffer.

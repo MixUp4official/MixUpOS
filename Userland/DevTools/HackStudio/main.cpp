@@ -42,13 +42,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio recvfd sendfd tty rpath cpath wpath proc exec unix fattr thread ptrace"));
 
     auto app = TRY(GUI::Application::create(arguments));
-    app->set_config_domain("HackStudio"_string);
+    app->set_config_domain("CodeIt"_string);
     Config::enable_permissive_mode();
-    Config::pledge_domains({ "HackStudio", "Terminal", "FileManager" });
+    Config::pledge_domains({ "CodeIt", "Terminal", "FileManager" });
 
     auto window = GUI::Window::construct();
-    window->restore_size_and_position("HackStudio"sv, "Window"sv, { { 840, 600 } });
-    window->save_size_and_position_on_close("HackStudio"sv, "Window"sv);
+    window->restore_size_and_position("CodeIt"sv, "Window"sv, { { 840, 600 } });
+    window->save_size_and_position_on_close("CodeIt"sv, "Window"sv);
     auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-hack-studio.png"sv));
     window->set_icon(icon);
 
@@ -63,7 +63,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     pid_t pid_to_debug = -1;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path_argument, "Path to a workspace or a file", "path", Core::ArgsParser::Required::No);
-    args_parser.add_option(mode_coredump, "Debug a coredump in HackStudio", "coredump", 'c');
+    args_parser.add_option(mode_coredump, "Debug a coredump in CodeIt", "coredump", 'c');
     args_parser.add_option(pid_to_debug, "Attach debugger to running process", "pid", 'p', "PID");
     args_parser.parse(arguments);
 
@@ -71,7 +71,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_main_widget(hack_studio_widget);
     s_hack_studio_widget = hack_studio_widget;
 
-    window->set_title(ByteString::formatted("{} - Hack Studio", hack_studio_widget->project().name()));
+    window->set_title(ByteString::formatted("{} - CodeIt", hack_studio_widget->project().name()));
 
     TRY(hack_studio_widget->initialize_menubar(*window));
 

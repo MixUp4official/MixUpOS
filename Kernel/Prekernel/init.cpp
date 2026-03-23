@@ -193,10 +193,20 @@ extern "C" [[noreturn]] void init()
         info.boot_framebuffer.height = multiboot_info_ptr->framebuffer_height;
         info.boot_framebuffer.bpp = multiboot_info_ptr->framebuffer_bpp;
 
-        if (multiboot_info_ptr->framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB)
-            info.boot_framebuffer.type = BootFramebufferType::BGRx8888;
-        else
+        if (multiboot_info_ptr->framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
+            auto red_position = multiboot_info_ptr->framebuffer_red_field_position;
+            auto green_position = multiboot_info_ptr->framebuffer_green_field_position;
+            auto blue_position = multiboot_info_ptr->framebuffer_blue_field_position;
+
+            if (red_position == 16 && green_position == 8 && blue_position == 0)
+                info.boot_framebuffer.type = BootFramebufferType::BGRx8888;
+            else if (red_position == 0 && green_position == 8 && blue_position == 16)
+                info.boot_framebuffer.type = BootFramebufferType::RGBx8888;
+            else
+                info.boot_framebuffer.type = BootFramebufferType::None;
+        } else {
             info.boot_framebuffer.type = BootFramebufferType::None;
+        }
     }
 
     reload_cr3();

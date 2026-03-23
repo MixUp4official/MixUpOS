@@ -182,7 +182,7 @@ ErrorOr<NonnullRefPtr<HackStudioWidget>> HackStudioWidget::create(ByteString pat
         };
     }
 
-    widget->project().model().set_should_show_dotfiles(Config::read_bool("HackStudio"sv, "Global"sv, "ShowDotfiles"sv, false));
+    widget->project().model().set_should_show_dotfiles(Config::read_bool("CodeIt"sv, "Global"sv, "ShowDotfiles"sv, false));
 
     return widget;
 }
@@ -215,7 +215,7 @@ void HackStudioWidget::on_action_tab_change()
 
 Vector<ByteString> HackStudioWidget::read_recent_projects()
 {
-    auto json = Config::read_string("HackStudio"sv, "Global"sv, "RecentProjects"sv);
+    auto json = Config::read_string("CodeIt"sv, "Global"sv, "RecentProjects"sv);
     AK::JsonParser parser(json);
     auto value_or_error = parser.parse();
     if (value_or_error.is_error())
@@ -1463,9 +1463,9 @@ ErrorOr<void> HackStudioWidget::create_edit_menu(GUI::Window& window)
 
     auto auto_save_before_build_or_run_action = GUI::Action::create_checkable("&Auto Save before Build or Run", [this](auto& action) {
         m_auto_save_before_build_or_run = action.is_checked();
-        Config::write_bool("HackStudio"sv, "Global"sv, "AutoSaveBeforeBuildOrRun"sv, m_auto_save_before_build_or_run);
+        Config::write_bool("CodeIt"sv, "Global"sv, "AutoSaveBeforeBuildOrRun"sv, m_auto_save_before_build_or_run);
     });
-    m_auto_save_before_build_or_run = Config::read_bool("HackStudio"sv, "Global"sv, "AutoSaveBeforeBuildOrRun"sv, false);
+    m_auto_save_before_build_or_run = Config::read_bool("CodeIt"sv, "Global"sv, "AutoSaveBeforeBuildOrRun"sv, false);
     auto_save_before_build_or_run_action->set_checked(m_auto_save_before_build_or_run);
     edit_menu->add_action(auto_save_before_build_or_run_action);
 
@@ -1495,9 +1495,9 @@ ErrorOr<void> HackStudioWidget::create_view_menu(GUI::Window& window)
     });
     auto show_dotfiles_action = GUI::Action::create_checkable("S&how Dotfiles", { Mod_Ctrl, Key_H }, [&](auto& checked) {
         project().model().set_should_show_dotfiles(checked.is_checked());
-        Config::write_bool("HackStudio"sv, "Global"sv, "ShowDotfiles"sv, checked.is_checked());
+        Config::write_bool("CodeIt"sv, "Global"sv, "ShowDotfiles"sv, checked.is_checked());
     });
-    show_dotfiles_action->set_checked(Config::read_bool("HackStudio"sv, "Global"sv, "ShowDotfiles"sv, false));
+    show_dotfiles_action->set_checked(Config::read_bool("CodeIt"sv, "Global"sv, "ShowDotfiles"sv, false));
 
     auto view_menu = window.add_menu("&View"_string);
     view_menu->add_action(hide_action_tabs_action);
@@ -1582,7 +1582,7 @@ void HackStudioWidget::create_help_menu(GUI::Window& window)
 {
     auto help_menu = window.add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(&window));
-    help_menu->add_action(GUI::CommonActions::make_about_action("Hack Studio"_string, GUI::Icon::default_icon("app-hack-studio"sv), &window));
+    help_menu->add_action(GUI::CommonActions::make_about_action("CodeIt"_string, GUI::Icon::default_icon("app-hack-studio"sv), &window));
 }
 
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_stop_action()
@@ -1725,7 +1725,7 @@ void HackStudioWidget::update_toolbar_actions()
 
 void HackStudioWidget::update_window_title()
 {
-    window()->set_title(ByteString::formatted("{} - {} - Hack Studio", m_current_editor_wrapper->filename_title(), m_project->name()));
+    window()->set_title(ByteString::formatted("{} - {} - CodeIt", m_current_editor_wrapper->filename_title(), m_project->name()));
     window()->set_modified(any_document_is_dirty());
 }
 
@@ -1860,9 +1860,9 @@ void HackStudioWidget::update_history_actions()
 
 RefPtr<Gfx::Font const> HackStudioWidget::read_editor_font_from_config()
 {
-    auto font_family = Config::read_string("HackStudio"sv, "EditorFont"sv, "Family"sv);
-    auto font_variant = Config::read_string("HackStudio"sv, "EditorFont"sv, "Variant"sv);
-    auto font_size = Config::read_i32("HackStudio"sv, "EditorFont"sv, "Size"sv);
+    auto font_family = Config::read_string("CodeIt"sv, "EditorFont"sv, "Family"sv);
+    auto font_variant = Config::read_string("CodeIt"sv, "EditorFont"sv, "Variant"sv);
+    auto font_size = Config::read_i32("CodeIt"sv, "EditorFont"sv, "Size"sv);
 
     auto font = Gfx::FontDatabase::the().get(MUST(FlyString::from_deprecated_fly_string(font_family)), FlyString::from_deprecated_fly_string(font_variant).release_value_but_fixme_should_propagate_errors(), font_size);
     if (font.is_null())
@@ -1878,9 +1878,9 @@ void HackStudioWidget::change_editor_font(RefPtr<Gfx::Font const> font)
         editor_wrapper->editor().set_font(*m_editor_font);
     }
 
-    Config::write_string("HackStudio"sv, "EditorFont"sv, "Family"sv, m_editor_font->family());
-    Config::write_string("HackStudio"sv, "EditorFont"sv, "Variant"sv, m_editor_font->variant());
-    Config::write_i32("HackStudio"sv, "EditorFont"sv, "Size"sv, m_editor_font->presentation_size());
+    Config::write_string("CodeIt"sv, "EditorFont"sv, "Family"sv, m_editor_font->family());
+    Config::write_string("CodeIt"sv, "EditorFont"sv, "Variant"sv, m_editor_font->variant());
+    Config::write_i32("CodeIt"sv, "EditorFont"sv, "Size"sv, m_editor_font->presentation_size());
 }
 
 void HackStudioWidget::open_coredump(StringView coredump_path)

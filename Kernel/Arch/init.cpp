@@ -191,7 +191,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init(BootInfo
     // If the bootloader didn't provide a framebuffer, then set up an initial text console.
     // We do so we can see the output on the screen as soon as possible.
     if (!kernel_command_line().is_early_boot_console_disabled()) {
-        if (!g_boot_info.boot_framebuffer.paddr.is_null() && g_boot_info.boot_framebuffer.type == BootFramebufferType::BGRx8888) {
+        if (!g_boot_info.boot_framebuffer.paddr.is_null() && g_boot_info.boot_framebuffer.type != BootFramebufferType::None) {
             g_boot_console = &try_make_lock_ref_counted<Graphics::BootFramebufferConsole>(g_boot_info.boot_framebuffer.paddr, g_boot_info.boot_framebuffer.width, g_boot_info.boot_framebuffer.height, g_boot_info.boot_framebuffer.pitch).value().leak_ref();
         } else {
             dbgln("No early framebuffer console available, initializing dummy console");

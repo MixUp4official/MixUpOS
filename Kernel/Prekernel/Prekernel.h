@@ -61,6 +61,7 @@ enum class BootMethod {
 enum class BootFramebufferType {
     None,
     BGRx8888,
+    RGBx8888,
 };
 
 struct BootFramebufferInfo {

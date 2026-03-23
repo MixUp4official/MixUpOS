@@ -1,0 +1,5 @@
+[App]
+Name=&LinuxDriverManager
+Executable=/bin/LinuxDriverManager
+Category=&System
+Description=Manage Linux driver compatibility manifests from /linux-driver

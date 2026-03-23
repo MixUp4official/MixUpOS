@@ -1,0 +1,8 @@
+[App]
+Name=&KextManager
+Executable=/bin/KextManager
+Category=&System
+Description=Scan /driverkext and inspect macOS .kext bundles
+
+[Launcher]
+FileTypes=kext

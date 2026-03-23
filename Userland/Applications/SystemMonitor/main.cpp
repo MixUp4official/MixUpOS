@@ -264,8 +264,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return result.release_error();
 
     TRY(Core::System::unveil("/bin/Profiler", "rx"));
-    // HackStudio doesn't exist in the minimal build configuration.
-    if (auto result = Core::System::unveil("/bin/HackStudio", "rx"); result.is_error() && result.error().code() != ENOENT)
+    // CodeIt doesn't exist in the minimal build configuration.
+    if (auto result = Core::System::unveil("/bin/CodeIt", "rx"); result.is_error() && result.error().code() != ENOENT)
         return result.release_error();
     TRY(Core::System::unveil(nullptr, nullptr));
 
@@ -392,12 +392,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         &process_table_view);
 
     auto debug_action = GUI::Action::create(
-        "Debug in HackStudio", { Mod_Ctrl, Key_D }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-hack-studio.png"sv)), [&](const GUI::Action&) {
+        "Debug in CodeIt", { Mod_Ctrl, Key_D }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-hack-studio.png"sv)), [&](const GUI::Action&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid == -1)
                 return;
             auto pid_string = ByteString::number(pid);
-            GUI::Process::spawn_or_show_error(window, "/bin/HackStudio"sv, Array { "--pid", pid_string.characters() });
+            GUI::Process::spawn_or_show_error(window, "/bin/CodeIt"sv, Array { "--pid", pid_string.characters() });
         },
         &process_table_view);
 

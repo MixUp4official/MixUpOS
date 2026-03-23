@@ -1,0 +1,8 @@
+[App]
+Name=&AppImage Launcher
+Executable=/bin/AppImageLauncher
+Category=&Utilities
+Description=GUI launcher for .AppImage packages
+
+[Launcher]
+FileTypes=appimage,AppImage

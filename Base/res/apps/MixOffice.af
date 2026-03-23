@@ -1,0 +1,9 @@
+[App]
+Name=&MixOffice
+Executable=/bin/MixOffice
+Category=&Office
+Description=Unified productivity hub: Writer, Sheets, Slides, CodeIt, Python, Terminal, Browser
+
+[Launcher]
+MimeTypes=application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain,text/markdown,text/csv
+FileTypes=doc,docx,odt,rtf,txt,md,xls,xlsx,ods,csv,ppt,pptx,odp

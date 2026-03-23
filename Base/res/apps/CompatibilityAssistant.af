@@ -2,9 +2,9 @@
 Name=Compatibility Assistant
 Executable=/bin/CompatibilityAssistant
 Category=Utilities
-Description=Handles foreign Windows and Linux file types
+Description=Handles foreign Windows, Linux, AppImage, and macOS kext file types
 ExcludeFromSystemMenu=true
 
 [Launcher]
 MimeTypes=application/x-executable,application/x-msi,application/x-rpm,application/x-apple-diskimage,application/vnd.apple.installer-package,application/x-mach-binary
-FileTypes=exe,dll,msi,rpm,appimage,so,dylib,dmg,pkg
+FileTypes=exe,dll,msi,rpm,appimage,so,dylib,dmg,pkg,kext

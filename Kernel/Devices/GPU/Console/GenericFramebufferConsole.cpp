@@ -6,6 +6,7 @@
  */
 
 #include <Kernel/Devices/GPU/Console/GenericFramebufferConsole.h>
+#include <Kernel/Boot/BootInfo.h>
 
 namespace Kernel::Graphics {
 
@@ -161,41 +162,53 @@ enum BGRColor : u32 {
     White = 0x00FFFFFF,
 };
 
-static inline BGRColor convert_standard_color_to_bgr_color(Console::Color color)
+static inline u32 convert_color_for_current_framebuffer(u32 color)
+{
+    if (g_boot_info.boot_framebuffer.type != BootFramebufferType::RGBx8888)
+        return color;
+
+    // Convert 0x00RRGGBB (BGRx8888 assumptions) into 0x00BBGGRR for RGBx framebuffers.
+    auto red = (color >> 16) & 0xff;
+    auto green = (color >> 8) & 0xff;
+    auto blue = color & 0xff;
+    return (blue << 16) | (green << 8) | red;
+}
+
+static inline u32 convert_standard_color_to_bgr_color(Console::Color color)
 {
     switch (color) {
     case Console::Color::Black:
-        return BGRColor::Black;
+        return convert_color_for_current_framebuffer(BGRColor::Black);
     case Console::Color::Red:
-        return BGRColor::Red;
+        return convert_color_for_current_framebuffer(BGRColor::Red);
     case Console::Color::Brown:
-        return BGRColor::Brown;
+        return convert_color_for_current_framebuffer(BGRColor::Brown);
     case Console::Color::Blue:
-        return BGRColor::Blue;
+        return convert_color_for_current_framebuffer(BGRColor::Blue);
     case Console::Color::Magenta:
-        return BGRColor::Magenta;
+        return convert_color_for_current_framebuffer(BGRColor::Magenta);
     case Console::Color::Green:
-        return BGRColor::Green;
+        return convert_color_for_current_framebuffer(BGRColor::Green);
     case Console::Color::Cyan:
-        return BGRColor::Cyan;
+        return convert_color_for_current_framebuffer(BGRColor::Cyan);
     case Console::Color::LightGray:
-        return BGRColor::LightGray;
+        return convert_color_for_current_framebuffer(BGRColor::LightGray);
     case Console::Color::DarkGray:
-        return BGRColor::DarkGray;
+        return convert_color_for_current_framebuffer(BGRColor::DarkGray);
     case Console::Color::BrightRed:
-        return BGRColor::BrightRed;
+        return convert_color_for_current_framebuffer(BGRColor::BrightRed);
     case Console::Color::BrightGreen:
-        return BGRColor::BrightGreen;
+        return convert_color_for_current_framebuffer(BGRColor::BrightGreen);
     case Console::Color::Yellow:
-        return BGRColor::Yellow;
+        return convert_color_for_current_framebuffer(BGRColor::Yellow);
     case Console::Color::BrightBlue:
-        return BGRColor::BrightBlue;
+        return convert_color_for_current_framebuffer(BGRColor::BrightBlue);
     case Console::Color::BrightMagenta:
-        return BGRColor::BrightMagenta;
+        return convert_color_for_current_framebuffer(BGRColor::BrightMagenta);
     case Console::Color::BrightCyan:
-        return BGRColor::BrightCyan;
+        return convert_color_for_current_framebuffer(BGRColor::BrightCyan);
     case Console::Color::White:
-        return BGRColor::White;
+        return convert_color_for_current_framebuffer(BGRColor::White);
     default:
         VERIFY_NOT_REACHED();
     }
@@ -329,8 +342,8 @@ void GenericFramebufferConsoleImpl::write(size_t x, size_t y, char ch, Color bac
     clear_glyph(x, y);
     auto bitmap = font_cathode_8x16[(int)ch];
     auto offset_in_framebuffer = framebuffer_offset(x, y);
-    BGRColor foreground_color = convert_standard_color_to_bgr_color(foreground);
-    BGRColor background_color = convert_standard_color_to_bgr_color(background);
+    u32 foreground_color = convert_standard_color_to_bgr_color(foreground);
+    u32 background_color = convert_standard_color_to_bgr_color(background);
     for (size_t glyph_row = 0; glyph_row < m_glyph_rows; glyph_row++) {
         for (size_t glyph_column = m_glyph_columns; glyph_column > 0; glyph_column--) {
             bool pixel_set = bitmap[glyph_row] & (1 << glyph_column);

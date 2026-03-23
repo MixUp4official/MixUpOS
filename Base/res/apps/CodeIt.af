@@ -1,0 +1,5 @@
+[App]
+Name=&CodeIt
+Executable=/bin/CodeIt
+Category=D&evelopment
+Description=Full developer IDE with project tools, debugging, and code navigation

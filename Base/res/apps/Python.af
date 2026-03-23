@@ -1,0 +1,5 @@
+[App]
+Name=&Python 3 REPL
+Executable=/usr/local/bin/python3
+Category=D&evelopment
+Description=Real CPython runtime for scripting, automation, and development
