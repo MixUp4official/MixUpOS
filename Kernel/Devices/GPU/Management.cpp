@@ -112,7 +112,7 @@ UNMAP_AFTER_INIT ErrorOr<void> GraphicsManagement::determine_and_initialize_grap
 UNMAP_AFTER_INIT void GraphicsManagement::initialize_preset_resolution_generic_display_connector()
 {
     VERIFY(!g_boot_info.boot_framebuffer.paddr.is_null());
-    VERIFY(g_boot_info.boot_framebuffer.type == BootFramebufferType::BGRx8888);
+    VERIFY(g_boot_info.boot_framebuffer.type != BootFramebufferType::None);
     dmesgln("Graphics: Using a preset resolution from the bootloader, without knowing the PCI device");
     m_preset_resolution_generic_display_connector = MUST(GenericDisplayConnector::create_with_preset_resolution(
         g_boot_info.boot_framebuffer.paddr,
@@ -152,7 +152,7 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
     }
 
     bool boot_framebuffer_usable = !g_boot_info.boot_framebuffer.paddr.is_null()
-        && g_boot_info.boot_framebuffer.type == BootFramebufferType::BGRx8888;
+        && g_boot_info.boot_framebuffer.type != BootFramebufferType::None;
 
     bool use_boot_framebuffer = graphics_subsystem_mode == CommandLine::GraphicsSubsystemMode::Limited
         && boot_framebuffer_usable;

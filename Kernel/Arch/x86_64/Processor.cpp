@@ -660,6 +660,14 @@ UNMAP_AFTER_INIT void ProcessorBase::initialize(u32 cpu)
     self->m_info = new ProcessorInfo(*self);
 
     dmesgln("CPU[{}]: Supported features: {}", current_id(), self->m_info->features_string());
+    if (self->m_info->is_amd_ryzen_cpu())
+        dmesgln("CPU[{}]: Loaded AMD Ryzen optimized CPU driver profile", current_id());
+    else if (self->m_info->is_amd_cpu())
+        dmesgln("CPU[{}]: Loaded AMD x86_64 optimized CPU driver profile", current_id());
+    else if (self->m_info->is_intel_cpu())
+        dmesgln("CPU[{}]: Loaded Intel x86_64 optimized CPU driver profile", current_id());
+    else
+        dmesgln("CPU[{}]: Loaded generic x86_64 CPU driver profile", current_id());
     if (!has_feature(CPUFeature::RDRAND))
         dmesgln("CPU[{}]: No RDRAND support detected, randomness will be poor", current_id());
     dmesgln("CPU[{}]: Physical address bit width: {}", current_id(), m_physical_address_bit_width);

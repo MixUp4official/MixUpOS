@@ -1,0 +1,8 @@
+[App]
+Name=&DevLaunchpad
+Executable=/bin/DevLaunchpad
+Category=&Development
+Description=Quick launcher for CodeIt, Terminal, FileManager, and Browser
+
+[Icons]
+16x16=app-terminal

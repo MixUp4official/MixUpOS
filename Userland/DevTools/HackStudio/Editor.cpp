@@ -121,8 +121,8 @@ Editor::Editor()
             painter.draw_scaled_bitmap(rect, icon, icon.rect());
         }).release_value_but_fixme_should_propagate_errors();
 
-    if (Config::read_string("HackStudio"sv, "Global"sv, "DocumentationSearchPaths"sv).is_empty()) {
-        Config::write_string("HackStudio"sv, "Global"sv, "DocumentationSearchPaths"sv, "[\"/usr/share/man/man2\", \"/usr/share/man/man3\"]"sv);
+    if (Config::read_string("CodeIt"sv, "Global"sv, "DocumentationSearchPaths"sv).is_empty()) {
+        Config::write_string("CodeIt"sv, "Global"sv, "DocumentationSearchPaths"sv, "[\"/usr/share/man/man2\", \"/usr/share/man/man3\"]"sv);
     }
 }
 
@@ -168,7 +168,7 @@ static HashMap<ByteString, ByteString>& man_paths()
 {
     static HashMap<ByteString, ByteString> paths;
     if (paths.is_empty()) {
-        auto json = Config::read_string("HackStudio"sv, "Global"sv, "DocumentationSearchPaths"sv);
+        auto json = Config::read_string("CodeIt"sv, "Global"sv, "DocumentationSearchPaths"sv);
         AK::JsonParser parser(json);
 
         auto value_or_error = parser.parse();
@@ -360,7 +360,7 @@ void Editor::drop_event(GUI::DropEvent& event)
             return;
         window()->move_to_front();
         if (urls.size() > 1) {
-            GUI::MessageBox::show(window(), "HackStudio can only open one file at a time!"sv, "One at a time please!"sv, GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window(), "CodeIt can only open one file at a time!"sv, "One at a time please!"sv, GUI::MessageBox::Type::Error);
             return;
         }
         set_current_editor_wrapper(static_cast<EditorWrapper*>(parent()));

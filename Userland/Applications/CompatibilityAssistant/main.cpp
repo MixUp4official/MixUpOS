@@ -63,6 +63,15 @@ static FileHandlingPlan plan_for_path(StringView path)
         };
     }
 
+    if (lower_path.ends_with(".kext"sv) || lower_path.contains(".kext/"sv)) {
+        return {
+            .headline = "macOS Kext Bundle"sv,
+            .detail = "Kext bundles can be inspected and managed from /driverkext using KextManager."sv,
+            .primary_button_label = "Open Bundle"sv,
+            .primary_action = PrimaryAction::OpenInFileManager,
+        };
+    }
+
     if (lower_path.ends_with(".exe"sv) || lower_path.ends_with(".msi"sv) || lower_path.ends_with(".dll"sv)) {
         return {
             .headline = "Windows Binary"sv,

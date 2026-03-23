@@ -1,0 +1,8 @@
+[App]
+Name=&FocusTimer
+Executable=/bin/FocusTimer
+Category=&Utilities
+Description=Simple Pomodoro-style countdown timer for focused work
+
+[Icons]
+16x16=app-clock

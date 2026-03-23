@@ -117,6 +117,13 @@ NonnullOwnPtr<KString> ProcessorInfo::build_features_string(Processor const& pro
     return KString::must_create(builder.string_view());
 }
 
+bool ProcessorInfo::is_amd_ryzen_cpu() const
+{
+    if (!is_amd_cpu())
+        return false;
+    return brand_string().contains("Ryzen"sv);
+}
+
 void ProcessorInfo::populate_cache_sizes_amd()
 {
     auto const max_extended_leaf = CPUID(0x80000000).eax();

@@ -39,6 +39,9 @@ public:
     Optional<Cache> const& l1_instruction_cache() const { return m_l1_instruction_cache; }
     Optional<Cache> const& l2_cache() const { return m_l2_cache; }
     Optional<Cache> const& l3_cache() const { return m_l3_cache; }
+    bool is_intel_cpu() const { return m_vendor_id_string->view() == s_intel_vendor_id; }
+    bool is_amd_cpu() const { return m_vendor_id_string->view() == s_amd_vendor_id; }
+    bool is_amd_ryzen_cpu() const;
 
     void set_apic_id(u32 apic_id) { m_apic_id = apic_id; }
 

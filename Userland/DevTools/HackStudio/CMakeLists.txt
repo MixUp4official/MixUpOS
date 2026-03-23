@@ -1,7 +1,7 @@
 serenity_component(
-    HackStudio
+    CodeIt
     RECOMMENDED
-    TARGETS HackStudio
+    TARGETS CodeIt
     DEPENDS CppLanguageServer ShellLanguageServer WebContent
 )
 
@@ -54,6 +54,6 @@ set(GENERATED_SOURCES
     Dialogs/NewProjectDialogGML.h
 )
 
-serenity_app(HackStudio ICON app-hack-studio)
-target_link_libraries(HackStudio PRIVATE LibELF LibWebView LibWeb LibMarkdown LibGUI LibCpp LibCMake LibGfx LibCore LibVT LibDebug LibDisassembly LibDiff LibShell LibSymbolication LibSyntax LibRegex LibSQL LibConfig LibCore LibCoredump LibDesktop LibFileSystem LibIPC LibJS LibMain LibThreading LibURL)
-add_dependencies(HackStudio CppLanguageServer)
+serenity_app(CodeIt ICON app-hack-studio)
+target_link_libraries(CodeIt PRIVATE LibELF LibWebView LibWeb LibMarkdown LibGUI LibCpp LibCMake LibGfx LibCore LibVT LibDebug LibDisassembly LibDiff LibShell LibSymbolication LibSyntax LibRegex LibSQL LibConfig LibCore LibCoredump LibDesktop LibFileSystem LibIPC LibJS LibMain LibThreading LibURL)
+add_dependencies(CodeIt CppLanguageServer)
