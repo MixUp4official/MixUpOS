@@ -96,6 +96,11 @@ if("${SERENITY_ARCH}" STREQUAL "x86_64")
         BYPRODUCTS ${CMAKE_BINARY_DIR}/grub_uefi_disk_image
         USES_TERMINAL
     )
+    add_custom_target(installer-iso-image
+        COMMAND "${CMAKE_COMMAND}" -E env ${SHARED_ENV_VARIABLES} "${SerenityOS_SOURCE_DIR}/Meta/build-image-installer-iso.sh"
+        BYPRODUCTS "${CMAKE_BINARY_DIR}/mixupos-installer.iso"
+        USES_TERMINAL
+    )
     add_custom_target(limine-image
         COMMAND "${CMAKE_COMMAND}" -E env ${SHARED_ENV_VARIABLES} "${SerenityOS_SOURCE_DIR}/Meta/build-image-limine.sh"
         BYPRODUCTS ${CMAKE_BINARY_DIR}/limine_disk_image

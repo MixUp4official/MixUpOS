@@ -5,9 +5,11 @@
  */
 
 #include <LibConfig/Client.h>
+#include <AK/ByteString.h>
 #include <LibCore/StandardPaths.h>
 #include <LibCore/System.h>
 #include <LibCore/Version.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -27,16 +29,24 @@ static ErrorOr<String> build_diagnostics_text()
 {
     auto version = TRY(Core::Version::read_long_version_string());
     auto theme_name = GUI::ConnectionToWindowServer::the().get_system_theme();
+    bool gpu_available = FileSystem::exists("/dev/gpu/connector0"sv) || FileSystem::exists("/dev/fb0"sv);
+    bool network_available = FileSystem::exists("/dev/net"sv) || FileSystem::exists("/sys/kernel/net"sv);
+    bool audio_available = FileSystem::exists("/dev/audio"sv) || FileSystem::exists("/dev/dsp"sv);
     return String::formatted(
         "MixUpOS Diagnostics\n"
         "Version: {}\n"
         "Theme: {}\n"
         "Home: {}\n"
-        "Recovery Center: available\n"
-        "App Store updates entry: available",
+        "GPU stack: {}\n"
+        "Network stack: {}\n"
+        "Audio stack: {}\n"
+        "Recovery Center: available",
         version,
         theme_name,
-        Core::StandardPaths::home_directory());
+        Core::StandardPaths::home_directory(),
+        gpu_available ? "detected" : "missing",
+        network_available ? "detected" : "missing",
+        audio_available ? "detected" : "missing");
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -50,6 +60,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/home", "rwc"));
     TRY(Core::System::unveil("/bin/AppStore", "x"));
+    TRY(Core::System::unveil("/bin/DriverHub", "x"));
+    TRY(Core::System::unveil("/bin/PartitionEditor", "x"));
     TRY(Core::System::unveil("/bin/SystemMonitor", "x"));
     TRY(Core::System::unveil("/bin/Terminal", "x"));
     TRY(Core::System::unveil("/bin/FileManager", "x"));
@@ -104,9 +116,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& row_three = root.add<GUI::Widget>();
     row_three.set_layout<GUI::HorizontalBoxLayout>(6);
     row_three.set_fixed_height(32);
-    auto& reboot_button = row_three.add<GUI::Button>("Reboot"_string);
-    auto& shutdown_button = row_three.add<GUI::Button>("Shut Down"_string);
-    row_three.add_spacer();
+    auto& driverhub_button = row_three.add<GUI::Button>("DriverHub"_string);
+    auto& partition_button = row_three.add<GUI::Button>("Partition Editor"_string);
+    auto& installer_button = row_three.add<GUI::Button>("Installer Assistant"_string);
+    auto& audit_button = row_three.add<GUI::Button>("Hardware Audit"_string);
+
+    auto& row_four = root.add<GUI::Widget>();
+    row_four.set_layout<GUI::HorizontalBoxLayout>(6);
+    row_four.set_fixed_height(32);
+    auto& reboot_button = row_four.add<GUI::Button>("Reboot"_string);
+    auto& shutdown_button = row_four.add<GUI::Button>("Shut Down"_string);
+    row_four.add_spacer();
 
     auto& statusbar = root.add<GUI::Statusbar>();
     statusbar.set_text("Recovery Center ready"_string);
@@ -144,6 +164,54 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         GUI::Clipboard::the().set_plain_text(diagnostics_or_error.release_value());
         statusbar.set_text("Copied diagnostics to clipboard"_string);
+    };
+    driverhub_button.on_click = [&]([[maybe_unused]] auto) {
+        GUI::Process::spawn_or_show_error(window.ptr(), "/bin/DriverHub"sv);
+        statusbar.set_text("Opened DriverHub"_string);
+    };
+    partition_button.on_click = [&]([[maybe_unused]] auto) {
+        GUI::Process::spawn_or_show_error(window.ptr(), "/bin/PartitionEditor"sv);
+        statusbar.set_text("Opened Partition Editor"_string);
+    };
+    installer_button.on_click = [&]([[maybe_unused]] auto) {
+        GUI::MessageBox::show(window.ptr(),
+            "Installer Assistant (real hardware)\n\n"
+            "1) Build installer ISO on host: ninja install && ninja installer-iso-image\n"
+            "2) Write mixupos-installer.iso to USB media.\n"
+            "3) Boot target machine from USB.\n"
+            "4) Verify driver readiness in DriverHub.\n"
+            "5) Partition target disk with PartitionEditor.\n"
+            "6) Deploy grub_uefi_disk_image (UEFI) or grub_disk_image (BIOS).\n\n"
+            "For fair Windows comparisons, run identical workloads on same hardware after driver audit.",
+            "Installer Assistant",
+            GUI::MessageBox::Type::Information);
+        statusbar.set_text("Displayed installer guidance"_string);
+    };
+    audit_button.on_click = [&]([[maybe_unused]] auto) {
+        bool gpu_available = FileSystem::exists("/dev/gpu/connector0"sv) || FileSystem::exists("/dev/fb0"sv);
+        bool network_available = FileSystem::exists("/dev/net"sv) || FileSystem::exists("/sys/kernel/net"sv);
+        bool audio_available = FileSystem::exists("/dev/audio"sv) || FileSystem::exists("/dev/dsp"sv);
+        int score = 0;
+        score += gpu_available ? 34 : 0;
+        score += network_available ? 33 : 0;
+        score += audio_available ? 33 : 0;
+        auto audit_message = ByteString::formatted(
+            "Hardware audit result: {}%\n"
+            "- GPU stack: {}\n"
+            "- Network stack: {}\n"
+            "- Audio stack: {}\n\n"
+            "Recommendation: {}",
+            score,
+            gpu_available ? "OK" : "MISSING",
+            network_available ? "OK" : "MISSING",
+            audio_available ? "OK" : "MISSING",
+            score >= 90 ? "Ready for Windows-fair benchmark runs." : "Resolve missing stacks before comparing against Windows.");
+
+        GUI::MessageBox::show(window.ptr(),
+            audit_message,
+            "Hardware Audit",
+            GUI::MessageBox::Type::Information);
+        statusbar.set_text("Hardware audit completed"_string);
     };
 
     reboot_button.on_click = [&]([[maybe_unused]] auto) {

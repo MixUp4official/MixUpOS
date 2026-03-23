@@ -23,6 +23,7 @@
 enum class PrimaryAction {
     OpenInFileManager,
     OpenInHexEditor,
+    OpenInAppImageLauncher,
 };
 
 struct FileHandlingPlan {
@@ -57,9 +58,9 @@ static FileHandlingPlan plan_for_path(StringView path)
     if (lower_path.ends_with(".appimage"sv)) {
         return {
             .headline = "AppImage Bundle"sv,
-            .detail = "AppImage runtime support is not available yet on this system."sv,
-            .primary_button_label = "Inspect Binary"sv,
-            .primary_action = PrimaryAction::OpenInHexEditor,
+            .detail = "Use AppImage Launcher for direct run and integration into /home/anon/Applications/AppImages."sv,
+            .primary_button_label = "Open AppImage Launcher"sv,
+            .primary_action = PrimaryAction::OpenInAppImageLauncher,
         };
     }
 
@@ -121,6 +122,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio recvfd sendfd cpath rpath proc exec"));
     TRY(Core::System::unveil("/bin/FileManager", "x"));
     TRY(Core::System::unveil("/bin/HexEditor", "x"));
+    TRY(Core::System::unveil("/bin/AppImageLauncher", "x"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
@@ -173,6 +175,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     primary_button.on_click = [window, path, plan](auto) {
         if (plan.primary_action == PrimaryAction::OpenInFileManager)
             GUI::Process::spawn_or_show_error(window.ptr(), "/bin/FileManager"sv, Array { path.bytes_as_string_view() });
+        else if (plan.primary_action == PrimaryAction::OpenInAppImageLauncher)
+            GUI::Process::spawn_or_show_error(window.ptr(), "/bin/AppImageLauncher"sv);
         else
             GUI::Process::spawn_or_show_error(window.ptr(), "/bin/HexEditor"sv, Array { path.bytes_as_string_view() });
         GUI::Application::the()->quit();

@@ -10,7 +10,8 @@ Maybe someday. Maybe never. If you want to see something happen, you can do it y
 
 ## Where are the ISO images?
 
-There are no ISO images. This project does not cater to non-technical users.
+MixUpOS now provides a build target for a real-hardware-focused installer ISO.
+See [InstallerISO.md](InstallerISO.md) and build it with `ninja installer-iso-image`.
 
 ## Well, how do I run this thing then?
 
