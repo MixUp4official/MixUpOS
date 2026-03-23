@@ -5,7 +5,8 @@ MixUpOS Rebranding Edition currently provides **experimental** AppImage support 
 ## What this means
 
 - This is a helper for running Linux AppImages on the **host system** during development.
-- It is **not** a full in-OS compatibility layer yet.
+- MixUpOS also includes GUI helpers (`AppImageLauncher` + `CompatibilityAssistant`) for in-OS selection, integration and diagnostics.
+- It is **not** a full ABI compatibility layer yet.
 - Compatibility depends on the AppImage itself and your host libraries.
 
 ## Runner script
@@ -33,7 +34,7 @@ The script attempts two strategies:
 
 - Some AppImages may still fail due to missing host dependencies.
 - Sandboxing integrations are app-dependent.
-- GUI integration (desktop entries, icon install, update channel) is not handled yet.
+- GUI integration currently focuses on managed placement in `/home/anon/Applications/AppImages`; desktop-file and update-channel integration are still pending.
 
 ## Roadmap ideas
 

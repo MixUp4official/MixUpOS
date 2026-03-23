@@ -72,6 +72,47 @@ static ErrorOr<ByteString> scan_linux_driver_manifests()
     return output.to_byte_string();
 }
 
+static ErrorOr<ByteString> build_hardware_audit_report()
+{
+    StringBuilder output;
+
+    auto count_entries = [](StringView path) -> size_t {
+        if (!FileSystem::exists(path))
+            return 0;
+        Core::DirIterator it(path, Core::DirIterator::Flags::SkipDots);
+        size_t count = 0;
+        while (it.has_next()) {
+            it.next_path();
+            ++count;
+        }
+        return count;
+    };
+
+    auto pci_count = count_entries("/sys/bus/pci/devices"sv);
+    auto usb_count = count_entries("/sys/bus/usb/devices"sv);
+    bool display_stack = FileSystem::exists("/dev/gpu/connector0"sv) || FileSystem::exists("/dev/fb0"sv);
+    bool hid_stack = FileSystem::exists("/dev/input"sv) || FileSystem::exists("/dev/hid"sv);
+    bool storage_stack = FileSystem::exists("/dev/nvme0"sv) || FileSystem::exists("/dev/hda"sv) || FileSystem::exists("/dev/sda"sv);
+
+    output.appendff("Real hardware driver audit\n");
+    output.appendff("PCI devices discovered: {}\n", pci_count);
+    output.appendff("USB devices discovered: {}\n", usb_count);
+    output.appendff("Display stack: {}\n", display_stack ? "ready" : "missing");
+    output.appendff("USB/HID stack: {}\n", hid_stack ? "ready" : "missing");
+    output.appendff("Storage stack: {}\n", storage_stack ? "ready" : "missing");
+
+    size_t ready = 0;
+    ready += display_stack ? 1 : 0;
+    ready += hid_stack ? 1 : 0;
+    ready += storage_stack ? 1 : 0;
+    int score = static_cast<int>((ready * 100) / 3);
+
+    output.appendff("Driver readiness score: {}%\n", score);
+    output.appendff("Windows-fair baseline: {}\n", score >= 90 ? "PASS" : "ACTION NEEDED");
+
+    return output.to_byte_string();
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio recvfd sendfd cpath rpath unix proc exec"));
@@ -79,6 +120,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio recvfd sendfd cpath rpath proc exec"));
     TRY(Core::System::unveil("/linux-driver", "r"));
+    TRY(Core::System::unveil("/sys", "r"));
+    TRY(Core::System::unveil("/dev", "r"));
     TRY(Core::System::unveil("/bin/FileManager", "x"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
@@ -91,7 +134,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     main_widget.set_fill_with_background_color(true);
     main_widget.set_layout<GUI::VerticalBoxLayout>(8, 8);
 
-    auto& title = main_widget.add<GUI::Label>("Linux Driver Compatibility Manifests (/linux-driver)"_string);
+    auto& title = main_widget.add<GUI::Label>("Linux Driver Compatibility + Real Hardware Audit"_string);
     title.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
     auto& output = main_widget.add<GUI::TextEditor>();
@@ -99,10 +142,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto refresh = [&]() {
         auto result = scan_linux_driver_manifests();
+        auto audit = build_hardware_audit_report();
         if (result.is_error())
             output.set_text(MUST(String::formatted("Scan failed: {}", result.error())));
+        else if (audit.is_error())
+            output.set_text(MUST(String::formatted("Hardware audit failed: {}", audit.error())));
         else
-            output.set_text(MUST(String::from_byte_string(result.release_value())));
+            output.set_text(MUST(String::formatted("{}\n\n{}",
+                MUST(String::from_byte_string(audit.release_value())),
+                MUST(String::from_byte_string(result.release_value())))));
     };
 
     auto& buttons = main_widget.add<GUI::Widget>();
@@ -114,6 +162,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& open_folder = buttons.add<GUI::Button>("Open /linux-driver"_string);
     open_folder.on_click = [&](auto) {
         GUI::Process::spawn_or_show_error(window.ptr(), "/bin/FileManager"sv, Array { "/linux-driver"sv });
+    };
+
+    auto& open_sys = buttons.add<GUI::Button>("Open /sys/bus"_string);
+    open_sys.on_click = [&](auto) {
+        GUI::Process::spawn_or_show_error(window.ptr(), "/bin/FileManager"sv, Array { "/sys/bus"sv });
     };
 
     refresh();

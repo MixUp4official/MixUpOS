@@ -12,12 +12,15 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
+#include <LibGUI/Clipboard.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/ListView.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Progressbar.h>
+#include <LibGUI/Statusbar.h>
 #include <LibGUI/Window.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/Font/FontDatabase.h>
@@ -29,6 +32,7 @@ struct DriverModule {
     ByteString kernel_target;
     Vector<ByteString> probe_paths;
     int baseline_score;
+    int windows_parity_weight;
 };
 
 static int clamp_score(int score)
@@ -54,8 +58,8 @@ static int module_score(DriverModule const& module, bool windows_target_mode)
     int score = module.baseline_score;
     if (!first_available_probe_path(module).has_value())
         score -= 15;
-    if (windows_target_mode && module.name.contains("Vulkan"sv))
-        score += 3;
+    if (windows_target_mode)
+        score += module.windows_parity_weight;
     return clamp_score(score);
 }
 
@@ -75,14 +79,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(720, 420);
 
-    Array<DriverModule, 7> modules = {
-        DriverModule { "WLAN Bridge", "Intel AX2xx + Realtek fallback profile active", "Kernel/Net", { "/sys/kernel/net", "/dev/net" }, 92 },
-        DriverModule { "OpenGL Driver", "OpenGL renderer runtime for games/apps", "Kernel/Devices/GPU/MixGPU/OpenGLAdapter", { "/usr/lib/libGL.so", "/usr/lib/libGL.so.1", "/usr/share/graphics/mixgpu-opengl.profile" }, 90 },
-        DriverModule { "Vulkan Driver", "Vulkan ICD + loader for modern render pipelines", "Kernel/Devices/GPU/MixGPU/VulkanAdapter", { "/usr/lib/libvulkan.so", "/usr/lib/libvulkan.so.1", "/usr/share/graphics/mixgpu-vulkan.profile" }, 89 },
-        DriverModule { "Audio Bridge", "ALSA profile mapping and low-latency mode enabled", "Kernel/Devices/Audio", { "/dev/audio", "/dev/dsp" }, 95 },
-        DriverModule { "Filesystem Bridge", "ext4 / btrfs helpers with safe-mount defaults", "Kernel/FileSystem", { "/bin/mount", "/bin/umount" }, 90 },
-        DriverModule { "Input Bridge", "Gamepad, touch, and high-polling mice merged", "Kernel/Devices/Input", { "/dev/input", "/dev/hid" }, 93 },
-        DriverModule { "GPU Device Node", "Kernel-side graphics device exposure", "Kernel/Devices/GPU", { "/dev/gpu/connector0", "/dev/fb0" }, 88 },
+    Array<DriverModule, 9> modules = {
+        DriverModule { "WLAN Bridge", "Intel AX2xx + Realtek fallback profile active", "Kernel/Net", { "/sys/kernel/net", "/dev/net" }, 92, 2 },
+        DriverModule { "OpenGL Driver", "OpenGL renderer runtime for games/apps", "Kernel/Devices/GPU/MixGPU/OpenGLAdapter", { "/usr/lib/libGL.so", "/usr/lib/libGL.so.1", "/usr/share/graphics/mixgpu-opengl.profile" }, 90, 2 },
+        DriverModule { "Vulkan Driver", "Vulkan ICD + loader for modern render pipelines", "Kernel/Devices/GPU/MixGPU/VulkanAdapter", { "/usr/lib/libvulkan.so", "/usr/lib/libvulkan.so.1", "/usr/share/graphics/mixgpu-vulkan.profile" }, 89, 4 },
+        DriverModule { "Audio Bridge", "ALSA profile mapping and low-latency mode enabled", "Kernel/Devices/Audio", { "/dev/audio", "/dev/dsp" }, 95, 2 },
+        DriverModule { "Filesystem Bridge", "ext4 / btrfs helpers with safe-mount defaults", "Kernel/FileSystem", { "/bin/mount", "/bin/umount" }, 90, 1 },
+        DriverModule { "Input Bridge", "Gamepad, touch, and high-polling mice merged", "Kernel/Devices/Input", { "/dev/input", "/dev/hid" }, 93, 2 },
+        DriverModule { "GPU Device Node", "Kernel-side graphics device exposure", "Kernel/Devices/GPU", { "/dev/gpu/connector0", "/dev/fb0" }, 88, 2 },
+        DriverModule { "NVMe Storage", "PCIe NVMe queue and APST tuning", "Kernel/Devices/Storage/NVMe", { "/dev/nvme0", "/dev/nvme0n1" }, 87, 3 },
+        DriverModule { "USB Input Stack", "USB HID stack for keyboards, mice and gamepads", "Kernel/Bus/USB", { "/dev/hid", "/sys/kernel/usb" }, 91, 2 },
     };
 
     Vector<ByteString> module_names;
@@ -144,6 +150,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& windows_target_mode = actions.add<GUI::CheckBox>("Windows-like target mode");
     auto& refresh_button = actions.add<GUI::Button>("Refresh status");
     auto& diagnostics_button = actions.add<GUI::Button>("Run diagnostics");
+    auto& copy_report_button = actions.add<GUI::Button>("Copy report");
+
+    auto& statusbar = root.add<GUI::Statusbar>();
+    statusbar.set_text("DriverHub ready");
 
     auto average_health = [&]() {
         int total = 0;
@@ -161,6 +171,25 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             tier_label.set_text("Tier: advanced");
         else
             tier_label.set_text("Tier: baseline");
+    };
+
+    auto generate_report = [&]() {
+        StringBuilder builder;
+        builder.appendff("DriverHub Hardware Report\n");
+        builder.appendff("Windows-target mode: {}\n", windows_target_mode.is_checked() ? "enabled" : "disabled");
+        builder.appendff("Strict recommendations: {}\n\n", strict_mode.is_checked() ? "enabled" : "disabled");
+        for (auto const& module : modules) {
+            auto score = module_score(module, windows_target_mode.is_checked());
+            auto detected_path = first_available_probe_path(module);
+            builder.appendff("- {}: {}%\n", module.name, score);
+            builder.appendff("  target: {}\n", module.kernel_target);
+            if (detected_path.has_value())
+                builder.appendff("  probe: {}\n", detected_path.value());
+            else
+                builder.appendff("  probe: MISSING\n");
+        }
+        builder.appendff("\nOverall compatibility: {}%\n", average_health());
+        return builder.to_byte_string();
     };
 
     auto update_from_selection = [&] {
@@ -206,11 +235,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     diagnostics_button.on_click = [&](auto) {
         refresh_summary(" (diagnostics complete)"sv);
         update_from_selection();
+        statusbar.set_text("Diagnostics completed");
+    };
+    copy_report_button.on_click = [&](auto) {
+        GUI::Clipboard::the().set_plain_text(generate_report());
+        statusbar.set_text("Driver report copied to clipboard");
+        GUI::MessageBox::show(window.ptr(), "A detailed hardware and driver report was copied to the clipboard.", "DriverHub", GUI::MessageBox::Type::Information);
     };
     strict_mode.on_checked = [&](auto) { update_from_selection(); };
     windows_target_mode.on_checked = [&](auto) {
         refresh_summary(" (target mode updated)"sv);
         update_from_selection();
+        statusbar.set_text("Windows parity scoring updated");
     };
 
     refresh_summary(""sv);

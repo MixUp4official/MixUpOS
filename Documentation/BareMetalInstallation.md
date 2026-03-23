@@ -2,7 +2,7 @@
 
 ## DISCLAIMER
 
-Whilst it is possible to run Serenity on physical x86-64-compatible hardware, it is not yet ready to be used by non-technical users who aren't prepared to report bugs or assist with its development. For this reason, there are currently no pre-built install images so a bare-metal installation requires that you build an installation image from source.
+Whilst it is possible to run Serenity on physical x86-64-compatible hardware, it is not yet ready to be used by non-technical users who aren't prepared to report bugs or assist with its development. A bare-metal installation therefore still requires building images from source, including the optional `installer-iso-image` target.
 
 ## Hardware support and requirements
 
@@ -17,6 +17,7 @@ At present there is no real GPU support so don't expect OpenGL, Vulkan nor accel
 
 Before creating a Serenity disk image, you need to build the OS as described in the [SerenityOS build instructions](BuildInstructions.md). Follow those instructions up to and including running **ninja install** (`Meta/serenity.sh image <arch>`).
 After the OS has built, run **ninja grub-uefi-image** (for UEFI systems) or **ninja grub-image** (for legacy BIOS systems) to create a new file called **grub_uefi_disk_image** or **grub_disk_image** with GRUB2 installed that can be booted on a real PC. This command requires `parted` and `grub2` (Arch: `grub`) to be installed.
+If you prefer ISO media for bootstrapping, run **ninja installer-iso-image** and follow [InstallerISO.md](InstallerISO.md).
 
 The final step is copying **grub_uefi_disk_image** or **grub_disk_image** onto the disk you wish to use to boot Serenity using a command such as:
 
