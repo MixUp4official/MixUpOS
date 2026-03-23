@@ -3,7 +3,11 @@
  */
 
 #include <AK/Array.h>
+#include <AK/HashMap.h>
+#include <AK/Vector.h>
 #include <LibCore/System.h>
+#include <LibCore/Process.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -33,15 +37,31 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(icon.bitmap_for_size(16));
     window->resize(700, 420);
 
-    Array<ByteString, 5> app_names = {
-        "DriverHub",
-        "LauncherForge",
-        "FeatureBoard",
-        "AppStudio",
-        "SystemTweaks",
+    struct AppEntry {
+        ByteString name;
+        ByteString description;
+        ByteString executable;
     };
 
-    auto model = GUI::ItemListModel<ByteString>::create(Vector<ByteString>(app_names.span()));
+    Array<AppEntry, 5> apps = {
+        AppEntry { "DriverHub", "Driver and compatibility monitor", "/bin/DriverHub" },
+        AppEntry { "LauncherForge", "Launcher profile builder", "/bin/LauncherForge" },
+        AppEntry { "FeatureBoard", "Feature roadmap and progress board", "/bin/FeatureBoard" },
+        AppEntry { "AppStudio", "Control center for all custom apps", "/bin/AppStudio" },
+        AppEntry { "SystemTweaks", "Preset toggles for compatibility and visuals", "/bin/SystemTweaks" },
+    };
+
+    Vector<ByteString> app_names;
+    HashMap<ByteString, AppEntry const*> app_lookup;
+    int detected_apps = 0;
+    for (auto const& app_entry : apps) {
+        app_names.append(app_entry.name);
+        app_lookup.set(app_entry.name, &app_entry);
+        if (FileSystem::exists(app_entry.executable))
+            ++detected_apps;
+    }
+
+    auto model = GUI::ItemListModel<ByteString>::create(move(app_names));
 
     auto& root = window->set_main_widget<GUI::Widget>();
     root.set_fill_with_background_color(true);
@@ -73,45 +93,73 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto& selected_app = detail_frame.add<GUI::Label>("Select an app to inspect");
     auto& app_desc = detail_frame.add<GUI::Label>("No app selected.");
+    auto& executable_label = detail_frame.add<GUI::Label>("Executable: -");
+    auto& availability_label = detail_frame.add<GUI::Label>("Status: -");
     auto& suite_health = detail_frame.add<GUI::Progressbar>();
     suite_health.set_range(0, 100);
-    suite_health.set_value(96);
+    suite_health.set_value((detected_apps * 100) / apps.size());
 
     auto& actions = root.add<GUI::Widget>();
     actions.set_layout<GUI::HorizontalBoxLayout>();
     actions.layout()->set_spacing(8);
 
-    auto& launch_btn = actions.add<GUI::Button>("Quick launch (simulated)");
+    auto& launch_btn = actions.add<GUI::Button>("Quick launch");
     auto& scan_btn = actions.add<GUI::Button>("Rescan suite");
-    auto& status = root.add<GUI::Label>("Suite healthy: 5/5 apps ready");
+    auto& status = root.add<GUI::Label>(ByteString::formatted("Suite healthy: {}/{} apps ready", detected_apps, apps.size()));
 
     app_list.on_selection_change = [&] {
         auto index = app_list.selection().first();
         if (!index.is_valid())
             return;
 
-        auto const& app_name = app_names[index.row()];
-        selected_app.set_text(ByteString::formatted("Selected: {}", app_name));
+        auto app_name = model->data(index, GUI::ModelRole::Display).to_byte_string();
+        auto maybe_entry = app_lookup.get(app_name);
+        if (!maybe_entry.has_value())
+            return;
+        auto const& app = *maybe_entry.value();
 
-        if (app_name == "DriverHub")
-            app_desc.set_text("Driver and Linux compatibility monitor.");
-        else if (app_name == "LauncherForge")
-            app_desc.set_text("Minecraft launcher/OpenJDK profile builder.");
-        else if (app_name == "FeatureBoard")
-            app_desc.set_text("Feature roadmap and rollout tracker.");
-        else if (app_name == "SystemTweaks")
-            app_desc.set_text("Preset toggles for compatibility and visuals.");
+        selected_app.set_text(ByteString::formatted("Selected: {}", app.name));
+        app_desc.set_text(app.description);
+        executable_label.set_text(ByteString::formatted("Executable: {}", app.executable));
+        if (FileSystem::exists(app.executable))
+            availability_label.set_text("Status: Installed");
         else
-            app_desc.set_text("Control center for all custom apps.");
+            availability_label.set_text("Status: Missing executable");
     };
 
     launch_btn.on_click = [&](auto) {
-        status.set_text("Quick launch requested for selected app (simulated).");
+        auto index = app_list.selection().first();
+        if (!index.is_valid()) {
+            status.set_text("Select an app before launching.");
+            return;
+        }
+        auto app_name = model->data(index, GUI::ModelRole::Display).to_byte_string();
+        auto maybe_entry = app_lookup.get(app_name);
+        if (!maybe_entry.has_value())
+            return;
+
+        auto const& app = *maybe_entry.value();
+        if (!FileSystem::exists(app.executable)) {
+            status.set_text(ByteString::formatted("Cannot launch {}: executable missing", app.name));
+            return;
+        }
+
+        Vector<StringView> launch_arguments;
+        if (auto spawn_result = Core::Process::spawn(app.executable, launch_arguments.span()); spawn_result.is_error()) {
+            status.set_text(ByteString::formatted("Launch failed for {}: {}", app.name, spawn_result.error()));
+            return;
+        }
+        status.set_text(ByteString::formatted("Launched {}", app.name));
     };
 
     scan_btn.on_click = [&](auto) {
-        suite_health.set_value(100);
-        status.set_text("Rescan complete: all custom apps verified.");
+        int installed_count = 0;
+        for (auto const& app : apps) {
+            if (FileSystem::exists(app.executable))
+                ++installed_count;
+        }
+        suite_health.set_value((installed_count * 100) / apps.size());
+        status.set_text(ByteString::formatted("Rescan complete: {}/{} apps available.", installed_count, apps.size()));
     };
 
     app_list.set_cursor(model->index(0, 0), GUI::AbstractView::SelectionUpdate::Set);
